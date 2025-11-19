@@ -3,15 +3,12 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router-dom";
 import OfflineIndicator from "./components/OfflineIndicator";
-import useNavigateTo from "./hooks/useNavigateTo";
 import { instanceStore, userStore } from "./store";
 import { cleanupExpiredOAuthState } from "./utils/oauth";
 import { loadTheme, setupSystemThemeListener } from "./utils/theme";
 
 const App = observer(() => {
   const { i18n } = useTranslation();
-  const navigateTo = useNavigateTo();
-  const instanceProfile = instanceStore.state.profile;
   const userGeneralSetting = userStore.state.userGeneralSetting;
   const instanceGeneralSetting = instanceStore.state.generalSetting;
 
@@ -19,13 +16,6 @@ const App = observer(() => {
   useEffect(() => {
     cleanupExpiredOAuthState();
   }, []);
-
-  // Redirect to sign up page if no instance owner.
-  useEffect(() => {
-    if (!instanceProfile.owner) {
-      navigateTo("/auth/signup");
-    }
-  }, [instanceProfile.owner]);
 
   useEffect(() => {
     if (instanceGeneralSetting.additionalStyle) {

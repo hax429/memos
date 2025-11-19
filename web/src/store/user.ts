@@ -305,23 +305,76 @@ const userStore = (() => {
 })();
 
 /**
+ * Auto-login helper for local-only mode.
+ * Creates a default "local" user if no users exist, or logs in with the first existing user.
+ */
+const autoLoginLocalUser = async () => {
+  try {
+    // Check if there are any users in the system
+    const { users } = await userServiceClient.listUsers({});
+
+    let username = "local";
+    const password = "local";
+
+    // If no users exist, create the default local user (will be HOST)
+    if (users.length === 0) {
+      console.log("No users found, creating default local user...");
+      await userServiceClient.createUser({
+        user: {
+          username,
+          password,
+          // First user will be assigned HOST role automatically by backend
+        },
+      });
+    } else {
+      // Use the first existing user
+      username = users[0].username;
+      console.log(`Found existing user: ${username}`);
+    }
+
+    // Create session (login)
+    await authServiceClient.createSession({
+      passwordCredentials: {
+        username,
+        password,
+      },
+    });
+
+    console.log("Auto-login successful");
+  } catch (error) {
+    console.error("Auto-login failed:", error);
+    throw error;
+  }
+};
+
+/**
  * Initializes the user store with proper sequencing to avoid temporal coupling.
+ * For local-only mode, automatically creates/logs in a local user.
  *
  * Initialization steps (order is critical):
  * 1. Fetch current authenticated user session
- * 2. Set current user in store (required for subsequent calls)
- * 3. Fetch user settings (depends on currentUser being set)
- * 4. Apply user preferences to instance store
+ * 2. If no session, auto-login with local user
+ * 3. Set current user in store (required for subsequent calls)
+ * 4. Fetch user settings (depends on currentUser being set)
+ * 5. Apply user preferences to instance store
  *
  * @throws Never - errors are handled internally with fallback behavior
  */
 export const initialUserStore = async () => {
   try {
-    // Step 1: Authenticate and get current user
-    const { user: currentUser } = await authServiceClient.getCurrentSession({});
+    // Step 1: Try to get current authenticated user session
+    let currentUser = (await authServiceClient.getCurrentSession({})).user;
+
+    // Step 2: If no session, auto-login with local user
+    if (!currentUser) {
+      console.log("No active session, attempting auto-login...");
+      await autoLoginLocalUser();
+      // Fetch session again after auto-login
+      currentUser = (await authServiceClient.getCurrentSession({})).user;
+    }
 
     if (!currentUser) {
-      // No authenticated user - clear state and use default locale
+      // Still no user after auto-login attempt - clear state and use default locale
       userStore.state.setPartial({
         currentUser: undefined,
         userGeneralSetting: undefined,
@@ -333,7 +386,7 @@ export const initialUserStore = async () => {
       return;
     }
 
-    // Step 2: Set current user in store
+    // Step 3: Set current user in store
     // CRITICAL: This must happen before fetchUserSettings() is called
     // because fetchUserSettings() depends on state.currentUser being set
     userStore.state.setPartial({
@@ -343,12 +396,12 @@ export const initialUserStore = async () => {
       },
     });
 
-    // Step 3: Fetch user settings and stats
-    // CRITICAL: This must happen after currentUser is set in step 2
+    // Step 4: Fetch user settings and stats
+    // CRITICAL: This must happen after currentUser is set in step 3
     // The fetchUserSettings() and fetchUserStats() methods check state.currentUser internally
     await Promise.all([userStore.fetchUserSettings(), userStore.fetchUserStats()]);
 
-    // Step 4: Apply user preferences to instance
+    // Step 5: Apply user preferences to instance
     // CRITICAL: This must happen after fetchUserSettings() completes
     // We need userGeneralSetting to be populated before accessing it
     const generalSetting = userStore.state.userGeneralSetting;

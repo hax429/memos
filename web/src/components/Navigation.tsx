@@ -70,21 +70,13 @@ const Navigation = observer((props: Props) => {
       </div>
     ),
   };
-  const signInNavLink: NavLinkItem = {
-    id: "header-auth",
-    path: Routes.AUTH,
-    title: t("common.sign-in"),
-    icon: <UserCircleIcon className="w-6 h-auto shrink-0" />,
-  };
-
-  const navLinks: NavLinkItem[] = currentUser
-    ? [homeNavLink, exploreNavLink, attachmentsNavLink, inboxNavLink]
-    : [exploreNavLink, signInNavLink];
+  // Always show authenticated navigation since we auto-login
+  const navLinks: NavLinkItem[] = [homeNavLink, exploreNavLink, attachmentsNavLink, inboxNavLink];
 
   return (
     <header className={cn("w-full h-full overflow-auto flex flex-col justify-between items-start gap-4 hide-scrollbar", className)}>
       <div className="w-full px-1 py-1 flex flex-col justify-start items-start space-y-2 overflow-auto overflow-x-hidden hide-scrollbar shrink">
-        <NavLink className="mb-3 cursor-default" to={currentUser ? Routes.ROOT : Routes.EXPLORE}>
+        <NavLink className="mb-3 cursor-default" to={Routes.ROOT}>
           <MemosLogo collapsed={collapsed} />
         </NavLink>
         {navLinks.map((navLink) => (
@@ -121,11 +113,9 @@ const Navigation = observer((props: Props) => {
           </NavLink>
         ))}
       </div>
-      {currentUser && (
-        <div className={cn("w-full flex flex-col justify-end", props.collapsed ? "items-center" : "items-start pl-3")}>
-          <UserMenu collapsed={collapsed} />
-        </div>
-      )}
+      <div className={cn("w-full flex flex-col justify-end", props.collapsed ? "items-center" : "items-start pl-3")}>
+        <UserMenu collapsed={collapsed} />
+      </div>
     </header>
   );
 });
