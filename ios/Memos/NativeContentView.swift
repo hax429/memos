@@ -57,12 +57,6 @@ struct NativeContentView: View {
                     .environmentObject(serverManager)
             }
         }
-        .task {
-            // Wait for server to start, then authenticate
-            if serverManager.isRunning {
-                await authViewModel.checkAuthentication()
-            }
-        }
         .onChange(of: serverManager.isRunning) { _, isRunning in
             if isRunning {
                 Task {

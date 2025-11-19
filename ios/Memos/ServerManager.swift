@@ -9,6 +9,7 @@ class ServerManager: ObservableObject {
     @Published var isRunning = false
     @Published var serverURL: String?
     @Published var error: String?
+    private var isStarting = false
     @Published var allowNetworkAccess = false {
         didSet {
             if oldValue != allowNetworkAccess && isRunning {
@@ -40,7 +41,13 @@ class ServerManager: ObservableObject {
     }
 
     func startServer() {
-        guard !isRunning else { return }
+        guard !isRunning && !isStarting else {
+            print("Server already running or starting, skipping start")
+            return
+        }
+
+        isStarting = true
+        defer { isStarting = false }
 
         do {
             // Get the documents directory
