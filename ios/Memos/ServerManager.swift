@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import UIKit
 import Mobile // This will be the gomobile framework
 
 class ServerManager: ObservableObject {
@@ -19,10 +20,24 @@ class ServerManager: ObservableObject {
             }
         }
     }
+    @Published var keepRunningInBackground = false {
+        didSet {
+            if keepRunningInBackground {
+                KeepAliveManager.shared.startKeepAlive()
+            } else {
+                KeepAliveManager.shared.stopKeepAlive()
+            }
+            saveSettings()
+        }
+    }
 
     private let port: Int = 5230
+    private var cancellables = Set<AnyCancellable>()
 
-    private init() {}
+    private init() {
+        loadSettings()
+        setupAppLifecycleObservers()
+    }
 
     func startServer() {
         guard !isRunning else { return }
@@ -116,5 +131,93 @@ class ServerManager: ObservableObject {
 
         freeifaddrs(ifaddr)
         return address
+    }
+
+    // MARK: - App Lifecycle
+
+    private func setupAppLifecycleObservers() {
+        NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
+            .sink { [weak self] _ in
+                self?.handleDidEnterBackground()
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
+            .sink { [weak self] _ in
+                self?.handleWillEnterForeground()
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: UIApplication.willTerminateNotification)
+            .sink { [weak self] _ in
+                self?.handleWillTerminate()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func handleDidEnterBackground() {
+        print("App entering background")
+
+        if keepRunningInBackground {
+            // Background execution is enabled - keep server running
+            print("Keep running in background is enabled")
+            BackgroundTaskManager.shared.scheduleBackgroundTasks()
+        } else {
+            // Default behavior - stop server
+            print("Stopping server for background")
+            stopServer()
+        }
+
+        saveServerState()
+    }
+
+    private func handleWillEnterForeground() {
+        print("App entering foreground")
+
+        // Restore server if it was running before
+        if shouldRestoreServer() {
+            startServer()
+        }
+    }
+
+    private func handleWillTerminate() {
+        print("App terminating")
+        stopServer()
+        KeepAliveManager.shared.stopKeepAlive()
+    }
+
+    // MARK: - State Persistence
+
+    private func saveServerState() {
+        let state: [String: Any] = [
+            "isRunning": isRunning,
+            "allowNetworkAccess": allowNetworkAccess,
+            "keepRunningInBackground": keepRunningInBackground
+        ]
+        UserDefaults.standard.set(state, forKey: "ServerState")
+        print("Server state saved")
+    }
+
+    private func shouldRestoreServer() -> Bool {
+        guard let state = UserDefaults.standard.dictionary(forKey: "ServerState") else {
+            return false
+        }
+        return state["isRunning"] as? Bool ?? false
+    }
+
+    private func saveSettings() {
+        let settings: [String: Any] = [
+            "allowNetworkAccess": allowNetworkAccess,
+            "keepRunningInBackground": keepRunningInBackground
+        ]
+        UserDefaults.standard.set(settings, forKey: "ServerSettings")
+    }
+
+    private func loadSettings() {
+        guard let settings = UserDefaults.standard.dictionary(forKey: "ServerSettings") else {
+            return
+        }
+        allowNetworkAccess = settings["allowNetworkAccess"] as? Bool ?? false
+        keepRunningInBackground = settings["keepRunningInBackground"] as? Bool ?? false
     }
 }

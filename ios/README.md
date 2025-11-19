@@ -97,6 +97,31 @@ To allow other devices on your network to access your Memos instance:
 
 **Security Note**: When network access is enabled, anyone on your local network can access your Memos instance. Ensure you're on a trusted network and set a strong password.
 
+### Background Execution
+
+By default, the server stops when the app is backgrounded (iOS standard behavior). To keep the server running in the background:
+
+1. Tap the gear icon (⚙️) in Settings
+2. Toggle "Keep Running in Background" ON
+3. The app will use background execution techniques to maintain server uptime
+
+**How it works**:
+- Uses silent audio playback to keep app active
+- Schedules background tasks for periodic wake-ups
+- Automatically saves and restores server state
+
+**Limitations**:
+- iOS limits background execution time
+- Server may pause during extended background periods (hours)
+- Increases battery usage (~5-10% per hour)
+- Background App Refresh must be enabled in iOS Settings
+
+**When to use**:
+- ✅ Active use: Keep enabled when actively accessing server from other devices
+- ❌ Overnight: Disable to save battery during long inactive periods
+
+See [BACKGROUND_EXECUTION.md](../BACKGROUND_EXECUTION.md) for detailed technical information.
+
 ### Data Storage
 
 All data is stored in your iOS app's Documents directory:
@@ -161,6 +186,29 @@ Check the Xcode console for error messages. Common issues:
 - Check Xcode console for server startup messages
 - Try force-quitting and restarting the app
 
+**Background execution not working**
+
+1. Check Background App Refresh is enabled:
+   - Settings > General > Background App Refresh
+   - Enable globally and for Memos app
+2. Verify "Keep Running in Background" is ON in app settings
+3. Check background status indicator (should show "Available" not "Denied")
+4. Look for these logs in Xcode console:
+   - "Keep running in background is enabled"
+   - "Silent audio started"
+   - "Background refresh task started"
+5. Remember: iOS limits background execution - server may pause after 15+ minutes
+
+**Server stops in background even with keep-alive enabled**
+
+This is expected iOS behavior. The keep-alive feature extends background runtime but doesn't guarantee 24/7 operation:
+- First 5 minutes: Usually works well
+- 5-15 minutes: May be intermittent
+- 15+ minutes: Only periodic wake-ups
+- Hours: Likely suspended
+
+See [BACKGROUND_EXECUTION.md](../BACKGROUND_EXECUTION.md) for details on iOS limitations.
+
 ## Development
 
 ### Rebuilding the Framework
@@ -187,30 +235,34 @@ let url = MobileNewServer(dataDir, port, addr, "dev", &serverError)
 
 ```
 ios/
-├── Memos/                      # iOS app source
-│   ├── MemosApp.swift         # App entry point
-│   ├── ContentView.swift      # Main UI with WebView
-│   ├── ServerManager.swift    # Go server interface
-│   ├── Assets.xcassets/       # App icons and assets
-│   └── Info.plist            # App configuration
-├── Memos.xcodeproj/          # Xcode project
-├── Frameworks/               # Generated frameworks (gitignored)
-│   └── Mobile.xcframework   # Go backend framework
-└── README.md                 # This file
+├── Memos/                              # iOS app source
+│   ├── MemosApp.swift                 # App entry point + AppDelegate
+│   ├── ContentView.swift              # Main UI with WebView
+│   ├── ServerManager.swift            # Go server interface + lifecycle
+│   ├── BackgroundTaskManager.swift    # Background tasks (fetch/processing)
+│   ├── KeepAliveManager.swift         # Silent audio keep-alive
+│   ├── BackgroundURLSessionManager.swift  # Background network transfers
+│   ├── Assets.xcassets/               # App icons and assets
+│   └── Info.plist                     # App configuration + background modes
+├── Memos.xcodeproj/                   # Xcode project
+├── Frameworks/                        # Generated frameworks (gitignored)
+│   └── Mobile.xcframework            # Go backend framework
+└── README.md                          # This file
 ```
 
 ## Limitations
 
-- **Background Execution**: iOS suspends apps in the background. The server stops when the app is backgrounded.
+- **Background Execution**: iOS limits background execution. Even with keep-alive enabled, the server may pause after 15+ minutes in background (see BACKGROUND_EXECUTION.md for details)
 - **Network Access**: Requires devices to be on the same local network
 - **Performance**: May be slower than desktop due to mobile hardware constraints
 - **Database Size**: Limited by available iOS storage
+- **Battery Life**: Background execution mode uses 5-10% battery per hour
 
 ## Future Enhancements
 
 Possible improvements for the iOS app:
 
-- [ ] Background server execution (using background modes)
+- [x] Background server execution (using background modes) ✅ **Implemented**
 - [ ] Local network service discovery (Bonjour)
 - [ ] Share extension for quick memo capture
 - [ ] Siri shortcuts integration
@@ -218,6 +270,8 @@ Possible improvements for the iOS app:
 - [ ] Watch app companion
 - [ ] iCloud sync between devices
 - [ ] Export/import database
+- [ ] Smart suspension (stop when no clients connected)
+- [ ] Battery-aware modes
 
 ## License
 

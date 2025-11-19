@@ -78,6 +78,8 @@ struct WebView: UIViewRepresentable {
 
 struct SettingsView: View {
     @EnvironmentObject var serverManager: ServerManager
+    @EnvironmentObject var backgroundTaskManager: BackgroundTaskManager
+    @EnvironmentObject var keepAliveManager: KeepAliveManager
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -138,6 +140,68 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    Toggle("Keep Running in Background", isOn: $serverManager.keepRunningInBackground)
+
+                    if serverManager.keepRunningInBackground {
+                        HStack {
+                            Text("Background Status")
+                            Spacer()
+                            Group {
+                                switch backgroundTaskManager.backgroundRefreshStatus {
+                                case .available:
+                                    Label("Available", systemImage: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                case .denied:
+                                    Label("Denied", systemImage: "xmark.circle.fill")
+                                        .foregroundColor(.red)
+                                case .restricted:
+                                    Label("Restricted", systemImage: "exclamationmark.circle.fill")
+                                        .foregroundColor(.orange)
+                                @unknown default:
+                                    Label("Unknown", systemImage: "questionmark.circle.fill")
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            .font(.caption)
+                        }
+
+                        if keepAliveManager.backgroundTimeRemaining != .infinity {
+                            HStack {
+                                Text("Background Time")
+                                Spacer()
+                                Text(formatTime(keepAliveManager.backgroundTimeRemaining))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        if let lastRefresh = backgroundTaskManager.lastBackgroundRefresh {
+                            HStack {
+                                Text("Last Refresh")
+                                Spacer()
+                                Text(lastRefresh, style: .relative)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+
+                        Text("⚠️ iOS limits background execution. The server may pause when the app is backgrounded for extended periods.")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    } else {
+                        Text("Server will stop when app is backgrounded to save battery.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } header: {
+                    Text("Background Execution")
+                } footer: {
+                    if backgroundTaskManager.backgroundRefreshStatus == .denied {
+                        Text("Background App Refresh is disabled in Settings. Go to Settings > General > Background App Refresh to enable it.")
+                    } else {
+                        Text("Enable to keep the server running when the app is in the background. Uses silent audio and background tasks to maintain server uptime.")
+                    }
+                }
+
+                Section {
                     Button("Restart Server") {
                         serverManager.stopServer()
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -177,9 +241,21 @@ struct SettingsView: View {
             }
         }
     }
+
+    // Helper to format time remaining
+    private func formatTime(_ time: TimeInterval) -> String {
+        if time == .infinity {
+            return "∞"
+        }
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
 }
 
 #Preview {
     ContentView()
         .environmentObject(ServerManager.shared)
+        .environmentObject(BackgroundTaskManager.shared)
+        .environmentObject(KeepAliveManager.shared)
 }
