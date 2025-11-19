@@ -119,10 +119,8 @@ func NewServer(dataDir string, port int, addr string, mode string) (string, erro
 	}()
 
 	// Construct server URL
+	// Always use localhost for the WebView, even if binding to 0.0.0.0 for network access
 	serverURL := fmt.Sprintf("http://localhost:%d", port)
-	if addr != "" && addr != "localhost" && addr != "127.0.0.1" {
-		serverURL = fmt.Sprintf("http://%s:%d", addr, port)
-	}
 
 	logger.Info("Memos server started", "url", serverURL)
 
