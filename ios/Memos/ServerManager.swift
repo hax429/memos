@@ -9,6 +9,7 @@ class ServerManager: ObservableObject {
     @Published var isRunning = false
     @Published var serverURL: String?
     @Published var error: String?
+    private var isStarting = false
     @Published var allowNetworkAccess = false {
         didSet {
             if oldValue != allowNetworkAccess && isRunning {
@@ -40,7 +41,13 @@ class ServerManager: ObservableObject {
     }
 
     func startServer() {
-        guard !isRunning else { return }
+        guard !isRunning && !isStarting else {
+            print("Server already running or starting, skipping start")
+            return
+        }
+
+        isStarting = true
+        defer { isStarting = false }
 
         do {
             // Get the documents directory
@@ -64,12 +71,15 @@ class ServerManager: ObservableObject {
             }
 
             DispatchQueue.main.async {
+                // Update APIClient with the actual server URL BEFORE setting isRunning
+                // This ensures authentication uses the correct URL
+                if let url = url {
+                    APIClient.shared.updateBaseURL(url)
+                }
+
                 self.serverURL = url
                 self.isRunning = true
                 self.error = nil
-
-                // Update APIClient with the actual server URL
-                APIClient.shared.updateBaseURL(url)
             }
 
             print("Server started at: \(url ?? "unknown")")

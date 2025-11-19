@@ -228,16 +228,34 @@ class AuthViewModel: ObservableObject {
     @Published var error: String?
 
     private let apiClient = APIClient.shared
+    private var isAuthenticating = false
 
     func checkAuthentication() async {
+        guard !isAuthenticating else {
+            print("Authentication already in progress, skipping")
+            return
+        }
+
+        isAuthenticating = true
         isLoading = true
+        defer {
+            isAuthenticating = false
+            isLoading = false
+        }
+
         do {
-            _ = try await apiClient.getCurrentSession()
+            let user = try await apiClient.getCurrentSession()
+            if user != nil {
+                print("Authenticated with existing session")
+            } else {
+                print("No session found, auto-login")
+                await autoLoginLocalUser()
+            }
         } catch {
             // Not authenticated - auto-create local user
+            print("Authentication failed, auto-login: \(error)")
             await autoLoginLocalUser()
         }
-        isLoading = false
     }
 
     private func autoLoginLocalUser() async {
