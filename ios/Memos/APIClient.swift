@@ -23,7 +23,7 @@ class APIClient: ObservableObject {
     // MARK: - Authentication
 
     func getCurrentSession() async throws -> User? {
-        let url = baseURL.appendingPathComponent("/api/v1/auth/session")
+        let url = baseURL.appendingPathComponent("/api/v1/auth/sessions/current")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
@@ -53,12 +53,12 @@ class APIClient: ObservableObject {
     }
 
     func createSession(username: String, password: String) async throws {
-        let url = baseURL.appendingPathComponent("/api/v1/auth/session")
+        let url = baseURL.appendingPathComponent("/api/v1/auth/sessions")
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let body = CreateSessionRequest(username: username, password: password)
+        let body = CreateSessionRequest(passwordCredentials: PasswordCredentials(username: username, password: password))
         request.httpBody = try JSONEncoder().encode(body)
 
         let (data, response) = try await session.data(for: request)
@@ -69,6 +69,14 @@ class APIClient: ObservableObject {
 
         guard httpResponse.statusCode == 200 else {
             throw APIError.httpError(statusCode: httpResponse.statusCode)
+        }
+
+        // Debug: Print cookies
+        print("All cookies in storage: \(HTTPCookieStorage.shared.cookies?.map { "\($0.name)=\($0.value) [domain:\($0.domain), path:\($0.path)]" } ?? [])")
+        if let cookies = HTTPCookieStorage.shared.cookies(for: url) {
+            print("Cookies after createSession for \(url): \(cookies.map { "\($0.name)=\($0.value)" })")
+        } else {
+            print("No cookies set for URL: \(url)")
         }
 
         let sessionResponse = try JSONDecoder().decode(SessionResponse.self, from: data)
@@ -141,6 +149,13 @@ class APIClient: ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // Debug: Print cookies before request
+        if let cookies = HTTPCookieStorage.shared.cookies(for: url) {
+            print("Cookies before createMemo: \(cookies.map { "\($0.name)=\($0.value)" })")
+        } else {
+            print("No cookies found for createMemo request!")
+        }
 
         let body = CreateMemoRequest(content: content, visibility: visibility)
         request.httpBody = try JSONEncoder().encode(body)
@@ -241,9 +256,13 @@ enum APIError: LocalizedError {
 
 // MARK: - Request/Response Models
 
-struct CreateSessionRequest: Codable {
+struct PasswordCredentials: Codable {
     let username: String
     let password: String
+}
+
+struct CreateSessionRequest: Codable {
+    let passwordCredentials: PasswordCredentials
 }
 
 struct SessionResponse: Codable {

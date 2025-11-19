@@ -64,7 +64,7 @@ struct MemoEditorView: View {
                             onSave(content)
                             dismiss()
                         }
-                        .fontWeight(.semibold)
+                        .font(.body.weight(.semibold))
                         .disabled(content.isEmpty)
                     }
                 }

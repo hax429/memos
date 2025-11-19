@@ -16,6 +16,11 @@
 		1A00000F000000000000002 /* BackgroundTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000010000000000000002 /* BackgroundTaskManager.swift */; };
 		1A000011000000000000002 /* KeepAliveManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000012000000000000002 /* KeepAliveManager.swift */; };
 		1A000013000000000000002 /* BackgroundURLSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000014000000000000002 /* BackgroundURLSessionManager.swift */; };
+		1A000015000000000000003 /* NativeContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000016000000000000003 /* NativeContentView.swift */; };
+		1A000017000000000000003 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000018000000000000003 /* Models.swift */; };
+		1A000019000000000000003 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00001A000000000000003 /* APIClient.swift */; };
+		1A00001B000000000000003 /* MemoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00001C000000000000003 /* MemoListView.swift */; };
+		1A00001D000000000000003 /* MemoEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A00001E000000000000003 /* MemoEditorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -43,6 +48,11 @@
 		1A000010000000000000002 /* BackgroundTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskManager.swift; sourceTree = "<group>"; };
 		1A000012000000000000002 /* KeepAliveManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeepAliveManager.swift; sourceTree = "<group>"; };
 		1A000014000000000000002 /* BackgroundURLSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundURLSessionManager.swift; sourceTree = "<group>"; };
+		1A000016000000000000003 /* NativeContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeContentView.swift; sourceTree = "<group>"; };
+		1A000018000000000000003 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		1A00001A000000000000003 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		1A00001C000000000000003 /* MemoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoListView.swift; sourceTree = "<group>"; };
+		1A00001E000000000000003 /* MemoEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoEditorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,10 +81,15 @@
 			children = (
 				1A000002000000000000001 /* MemosApp.swift */,
 				1A000004000000000000001 /* ContentView.swift */,
+				1A000016000000000000003 /* NativeContentView.swift */,
 				1A000006000000000000001 /* ServerManager.swift */,
 				1A000010000000000000002 /* BackgroundTaskManager.swift */,
 				1A000012000000000000002 /* KeepAliveManager.swift */,
 				1A000014000000000000002 /* BackgroundURLSessionManager.swift */,
+				1A000018000000000000003 /* Models.swift */,
+				1A00001A000000000000003 /* APIClient.swift */,
+				1A00001C000000000000003 /* MemoListView.swift */,
+				1A00001E000000000000003 /* MemoEditorView.swift */,
 				1A000008000000000000001 /* Assets.xcassets */,
 				1A00000E000000000000001 /* Info.plist */,
 			);
@@ -168,11 +183,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A000003000000000000001 /* ContentView.swift in Sources */,
+				1A000015000000000000003 /* NativeContentView.swift in Sources */,
 				1A000005000000000000001 /* ServerManager.swift in Sources */,
 				1A000001000000000000001 /* MemosApp.swift in Sources */,
 				1A00000F000000000000002 /* BackgroundTaskManager.swift in Sources */,
 				1A000011000000000000002 /* KeepAliveManager.swift in Sources */,
 				1A000013000000000000002 /* BackgroundURLSessionManager.swift in Sources */,
+				1A000017000000000000003 /* Models.swift in Sources */,
+				1A000019000000000000003 /* APIClient.swift in Sources */,
+				1A00001B000000000000003 /* MemoListView.swift in Sources */,
+				1A00001D000000000000003 /* MemoEditorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,6 +327,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = XUR3432T6M;
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Memos/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -314,11 +338,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Frameworks",
-				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -345,6 +365,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = XUR3432T6M;
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Memos/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -352,11 +376,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Frameworks",
-				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
