@@ -15,24 +15,13 @@ const RootLayout = observer(() => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { sm } = useResponsiveWidth();
-  const currentUser = useCurrentUser();
   const [initialized, setInitialized] = useState(false);
   const pathname = useMemo(() => location.pathname, [location.pathname]);
   const prevPathname = usePrevious(pathname);
 
   useEffect(() => {
-    if (!currentUser) {
-      // If disallowPublicVisibility is enabled, redirect to the login page if the user is not logged in.
-      if (instanceStore.state.memoRelatedSetting.disallowPublicVisibility) {
-        window.location.href = Routes.AUTH;
-        return;
-      } else if (
-        ([Routes.ROOT, Routes.ATTACHMENTS, Routes.INBOX, Routes.ARCHIVED, Routes.SETTING] as string[]).includes(location.pathname)
-      ) {
-        window.location.href = Routes.EXPLORE;
-        return;
-      }
-    }
+    // Since we auto-login, we can assume there's always a user
+    // No need to redirect to auth pages
     setInitialized(true);
   }, []);
 

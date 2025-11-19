@@ -61,7 +61,8 @@ const UserMenu = observer((props: Props) => {
 
     keysToRemove.forEach((key) => localStorage.removeItem(key));
 
-    window.location.href = Routes.AUTH;
+    // Reload page to trigger auto-login
+    window.location.href = Routes.ROOT;
   };
 
   return (

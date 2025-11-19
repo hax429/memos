@@ -6,6 +6,17 @@ struct ContentView: View {
     @State private var showSettings = false
 
     var body: some View {
+        // Use native SwiftUI interface for faster launch
+        NativeContentView()
+    }
+}
+
+// Legacy WebView interface (kept for reference)
+struct LegacyWebViewInterface: View {
+    @EnvironmentObject var serverManager: ServerManager
+    @State private var showSettings = false
+
+    var body: some View {
         NavigationView {
             ZStack {
                 if serverManager.isRunning, let url = serverManager.serverURL {
