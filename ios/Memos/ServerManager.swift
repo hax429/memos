@@ -64,14 +64,15 @@ class ServerManager: ObservableObject {
             }
 
             DispatchQueue.main.async {
-                self.serverURL = url
-                self.isRunning = true
-                self.error = nil
-
-                // Update APIClient with the actual server URL
+                // Update APIClient with the actual server URL BEFORE setting isRunning
+                // This ensures authentication uses the correct URL
                 if let url = url {
                     APIClient.shared.updateBaseURL(url)
                 }
+
+                self.serverURL = url
+                self.isRunning = true
+                self.error = nil
             }
 
             print("Server started at: \(url ?? "unknown")")
