@@ -69,9 +69,7 @@ class ServerManager: ObservableObject {
                 self.error = nil
 
                 // Update APIClient with the actual server URL
-                if let url = url {
-                    APIClient.shared.updateBaseURL(url)
-                }
+                APIClient.shared.updateBaseURL(url)
             }
 
             print("Server started at: \(url ?? "unknown")")
