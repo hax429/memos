@@ -5,6 +5,7 @@ import { matchPath } from "react-router-dom";
 import PullToRefresh from "react-simple-pull-to-refresh";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_LIST_MEMOS_PAGE_SIZE } from "@/helpers/consts";
+import { useHaptic, useRafThrottle } from "@/hooks";
 import useResponsiveWidth from "@/hooks/useResponsiveWidth";
 import { Routes } from "@/router";
 import { memoStore, userStore, viewStore } from "@/store";
@@ -30,6 +31,7 @@ interface Props {
 const PagedMemoList = observer((props: Props) => {
   const t = useTranslate();
   const { md } = useResponsiveWidth();
+  const { hapticSuccess } = useHaptic();
 
   // Simplified state management - separate state variables for clarity
   const [isRequesting, setIsRequesting] = useState(true);
@@ -104,6 +106,7 @@ const PagedMemoList = observer((props: Props) => {
     memoStore.state.updateStateId();
     setNextPageToken("");
     await fetchMoreMemos("");
+    hapticSuccess(); // Haptic feedback on successful refresh
   };
 
   // Initial load and reload when props change
@@ -127,20 +130,25 @@ const PagedMemoList = observer((props: Props) => {
     };
   }, []);
 
+  // Throttled scroll handler for better performance
+  const handleScrollThrottled = useRafThrottle(
+    useCallback(() => {
+      if (!nextPageToken || isRequesting) return;
+
+      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
+      if (nearBottom) {
+        fetchMoreMemos(nextPageToken);
+      }
+    }, [nextPageToken, isRequesting]),
+  );
+
   // Infinite scroll: fetch more when user scrolls near bottom
   useEffect(() => {
     if (!nextPageToken) return;
 
-    const handleScroll = () => {
-      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
-      if (nearBottom && !isRequesting) {
-        fetchMoreMemos(nextPageToken);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [nextPageToken, isRequesting]);
+    window.addEventListener("scroll", handleScrollThrottled, { passive: true });
+    return () => window.removeEventListener("scroll", handleScrollThrottled);
+  }, [nextPageToken, handleScrollThrottled]);
 
   const children = (
     <div className="flex flex-col justify-start items-start w-full max-w-full">
@@ -215,19 +223,24 @@ const PagedMemoList = observer((props: Props) => {
 
 const BackToTop = () => {
   const t = useTranslate();
+  const { hapticTap } = useHaptic();
   const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
+  // Throttled scroll handler for better performance
+  const handleScrollThrottled = useRafThrottle(
+    useCallback(() => {
       const shouldShow = window.scrollY > 400;
       setIsVisible(shouldShow);
-    };
+    }, []),
+  );
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  useEffect(() => {
+    window.addEventListener("scroll", handleScrollThrottled, { passive: true });
+    return () => window.removeEventListener("scroll", handleScrollThrottled);
+  }, [handleScrollThrottled]);
 
   const scrollToTop = () => {
+    hapticTap(); // Haptic feedback on tap
     window.scrollTo({
       top: 0,
       behavior: "smooth",

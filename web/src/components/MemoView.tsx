@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useHaptic } from "@/hooks";
 import useAsyncEffect from "@/hooks/useAsyncEffect";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useNavigateTo from "@/hooks/useNavigateTo";
@@ -42,6 +43,7 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
   const navigateTo = useNavigateTo();
   const currentUser = useCurrentUser();
   const user = useCurrentUser();
+  const { hapticTap, hapticSuccess } = useHaptic();
   const [showEditor, setShowEditor] = useState<boolean>(false);
   const [creator, setCreator] = useState(userStore.getUserByName(memo.creator));
   const [showNSFWContent, setShowNSFWContent] = useState(props.showNsfwContent);
@@ -116,6 +118,7 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
   };
 
   const onPinIconClick = async () => {
+    hapticTap();
     if (memo.pinned) {
       await memoStore.updateMemo(
         {
@@ -133,6 +136,7 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
     }
 
     try {
+      hapticSuccess();
       await memoStore.updateMemo(
         {
           name: memo.name,
@@ -146,7 +150,7 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
       console.error(error);
       toast.error(error?.details);
     }
-  }, [isArchived, memo.name, t, memoStore, userStore]);
+  }, [isArchived, memo.name, t, memoStore, userStore, hapticSuccess]);
 
   useEffect(() => {
     if (!shortcutActive || readonly || showEditor || !cardRef.current) {
@@ -228,7 +232,7 @@ const MemoView: React.FC<Props> = observer((props: Props) => {
   ) : (
     <div
       className={cn(
-        "relative group flex flex-col justify-start items-start bg-card w-full px-4 py-3 mb-2 gap-2 text-card-foreground rounded-lg border border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "relative group flex flex-col justify-start items-start bg-card w-full px-4 py-3 mb-2 gap-2 text-card-foreground rounded-lg border border-border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:shadow-sm hover:border-accent animate-fade-in-up",
         shortcutActive && !showEditor && "border-ring ring-2 ring-ring bg-accent/10",
         className,
       )}

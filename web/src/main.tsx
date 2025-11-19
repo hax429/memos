@@ -5,12 +5,14 @@ import { Toaster } from "react-hot-toast";
 import { RouterProvider } from "react-router-dom";
 import "./i18n";
 import "./index.css";
+import "./styles/transitions.css";
 import router from "./router";
 // Configure MobX before importing any stores
 import "./store/config";
 import { initialInstanceStore } from "./store/instance";
 import { initialUserStore } from "./store/user";
 import { applyThemeEarly } from "./utils/theme";
+import { initWebVitals, logPerformanceSummary } from "./utils/webVitals";
 import "leaflet/dist/leaflet.css";
 
 // Apply theme early to prevent flash of wrong theme
@@ -43,5 +45,18 @@ const Main = observer(() => (
           console.log("Service Worker registration failed:", error);
         });
     });
+  }
+
+  // Initialize Web Vitals monitoring
+  initWebVitals((metric) => {
+    // You can send metrics to analytics here
+    // Example: analytics.track('web-vitals', metric);
+  });
+
+  // Log performance summary in development
+  if (import.meta.env.DEV) {
+    setTimeout(() => {
+      logPerformanceSummary();
+    }, 2000);
   }
 })();
