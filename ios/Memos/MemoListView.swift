@@ -37,19 +37,19 @@ struct MemoListView: View {
         }
         .sheet(isPresented: $showingEditor) {
             MemoEditorView(memo: selectedMemo) { content in
-                if let selectedMemo = selectedMemo {
-                    // Update existing memo
-                    Task {
-                        try? await APIClient.shared.updateMemo(name: selectedMemo.name, content: content)
-                        await viewModel.loadMemos()
+                do {
+                    if let selectedMemo = selectedMemo {
+                        // Update existing memo
+                        try await viewModel.updateMemo(name: selectedMemo.name, content: content)
+                    } else {
+                        // Create new memo
+                        try await viewModel.createMemo(content: content)
                     }
-                } else {
-                    // Create new memo
-                    Task {
-                        await viewModel.createMemo(content: content)
-                    }
+                    self.selectedMemo = nil
+                } catch {
+                    // Error will be displayed via the viewModel.error alert
+                    print("Failed to save memo: \(error)")
                 }
-                self.selectedMemo = nil
             }
         }
         .task {

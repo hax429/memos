@@ -158,6 +158,7 @@ struct UserStats: Codable {
 class MemoListViewModel: ObservableObject {
     @Published var memos: [Memo] = []
     @Published var isLoading = false
+    @Published var isSaving = false
     @Published var error: String?
     @Published var userStats: UserStats?
 
@@ -183,12 +184,31 @@ class MemoListViewModel: ObservableObject {
         }
     }
 
-    func createMemo(content: String) async {
+    func createMemo(content: String) async throws {
+        isSaving = true
+        defer { isSaving = false }
+
         do {
             let newMemo = try await apiClient.createMemo(content: content)
             memos.insert(newMemo, at: 0)
         } catch {
             self.error = error.localizedDescription
+            throw error
+        }
+    }
+
+    func updateMemo(name: String, content: String) async throws {
+        isSaving = true
+        defer { isSaving = false }
+
+        do {
+            let updatedMemo = try await apiClient.updateMemo(name: name, content: content)
+            if let index = memos.firstIndex(where: { $0.name == name }) {
+                memos[index] = updatedMemo
+            }
+        } catch {
+            self.error = error.localizedDescription
+            throw error
         }
     }
 

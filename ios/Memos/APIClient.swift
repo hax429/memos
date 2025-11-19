@@ -20,6 +20,14 @@ class APIClient: ObservableObject {
         self.session = URLSession(configuration: configuration)
     }
 
+    // Update the base URL (called when server starts with actual URL)
+    func updateBaseURL(_ urlString: String) {
+        if let url = URL(string: urlString) {
+            self.baseURL = url
+            print("APIClient baseURL updated to: \(urlString)")
+        }
+    }
+
     // MARK: - Authentication
 
     func getCurrentSession() async throws -> User? {

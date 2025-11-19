@@ -2,14 +2,16 @@ import SwiftUI
 
 struct MemoEditorView: View {
     let memo: Memo?
-    let onSave: (String) -> Void
+    let onSave: (String) async throws -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var content: String
     @State private var showingPreview = false
+    @State private var isSaving = false
+    @State private var saveError: String?
     @FocusState private var isTextEditorFocused: Bool
 
-    init(memo: Memo? = nil, onSave: @escaping (String) -> Void) {
+    init(memo: Memo? = nil, onSave: @escaping (String) async throws -> Void) {
         self.memo = memo
         self.onSave = onSave
         _content = State(initialValue: memo?.content ?? "")
@@ -52,6 +54,7 @@ struct MemoEditorView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .disabled(isSaving)
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -59,13 +62,39 @@ struct MemoEditorView: View {
                         Button(action: { showingPreview.toggle() }) {
                             Image(systemName: showingPreview ? "pencil" : "eye")
                         }
+                        .disabled(isSaving)
 
-                        Button("Save") {
-                            onSave(content)
-                            dismiss()
+                        Button(action: {
+                            Task {
+                                isSaving = true
+                                saveError = nil
+                                do {
+                                    try await onSave(content)
+                                    isSaving = false
+                                    // Provide haptic feedback on successful save
+                                    let generator = UINotificationFeedbackGenerator()
+                                    generator.notificationOccurred(.success)
+                                    dismiss()
+                                } catch {
+                                    isSaving = false
+                                    saveError = error.localizedDescription
+                                    // Provide error haptic feedback
+                                    let generator = UINotificationFeedbackGenerator()
+                                    generator.notificationOccurred(.error)
+                                }
+                            }
+                        }) {
+                            HStack(spacing: 6) {
+                                if isSaving {
+                                    ProgressView()
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Text("Save")
+                                }
+                            }
                         }
                         .font(.body.weight(.semibold))
-                        .disabled(content.isEmpty)
+                        .disabled(content.isEmpty || isSaving)
                     }
                 }
 
@@ -104,6 +133,15 @@ struct MemoEditorView: View {
             .onAppear {
                 if memo == nil {
                     isTextEditorFocused = true
+                }
+            }
+            .alert("Error Saving Memo", isPresented: .constant(saveError != nil)) {
+                Button("OK") {
+                    saveError = nil
+                }
+            } message: {
+                if let error = saveError {
+                    Text(error)
                 }
             }
         }
