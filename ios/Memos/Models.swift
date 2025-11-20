@@ -143,17 +143,39 @@ struct MemoRelation: Codable, Identifiable {
 
 struct UserStats: Codable {
     let name: String
-    let memoCount: Int
-    let tagCount: [String: Int]
+    let memoDisplayTimestamps: [String]?
+    let memoTypeStats: MemoTypeStats?
+    let tagCount: [String: Int32]
+    let pinnedMemos: [String]?
+    let totalMemoCount: Int32
 
     enum CodingKeys: String, CodingKey {
         case name
-        case memoCount = "totalMemoCount"
+        case memoDisplayTimestamps = "memoDisplayTimestamps"
+        case memoTypeStats = "memoTypeStats"
         case tagCount = "tagCount"
+        case pinnedMemos = "pinnedMemos"
+        case totalMemoCount = "totalMemoCount"
     }
 
-    var sortedTags: [(String, Int)] {
+    var sortedTags: [(String, Int32)] {
         tagCount.sorted { $0.value > $1.value }
+    }
+}
+
+// MARK: - Memo Type Stats
+
+struct MemoTypeStats: Codable {
+    let linkCount: Int32?
+    let codeCount: Int32?
+    let todoCount: Int32?
+    let undoCount: Int32?
+
+    enum CodingKeys: String, CodingKey {
+        case linkCount = "linkCount"
+        case codeCount = "codeCount"
+        case todoCount = "todoCount"
+        case undoCount = "undoCount"
     }
 }
 

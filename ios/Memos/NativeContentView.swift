@@ -2,6 +2,8 @@ import SwiftUI
 
 struct NativeContentView: View {
     @EnvironmentObject var serverManager: ServerManager
+    @EnvironmentObject var backgroundTaskManager: BackgroundTaskManager
+    @EnvironmentObject var keepAliveManager: KeepAliveManager
     @StateObject private var authViewModel = AuthViewModel()
     @State private var showSettings = false
 
@@ -55,6 +57,8 @@ struct NativeContentView: View {
             .sheet(isPresented: $showSettings) {
                 SettingsView()
                     .environmentObject(serverManager)
+                    .environmentObject(backgroundTaskManager)
+                    .environmentObject(keepAliveManager)
             }
         }
         .onChange(of: serverManager.isRunning) { _, isRunning in
@@ -70,4 +74,6 @@ struct NativeContentView: View {
 #Preview {
     NativeContentView()
         .environmentObject(ServerManager.shared)
+        .environmentObject(BackgroundTaskManager.shared)
+        .environmentObject(KeepAliveManager.shared)
 }

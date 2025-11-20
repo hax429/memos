@@ -222,7 +222,7 @@ class APIClient: ObservableObject {
     // MARK: - User Stats
 
     func getUserStats(userName: String) async throws -> UserStats {
-        let url = baseURL.appendingPathComponent("/api/v1/\(userName)/stats")
+        let url = baseURL.appendingPathComponent("/api/v1/\(userName):getStats")
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
