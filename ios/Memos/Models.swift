@@ -4,10 +4,9 @@ import Foundation
 
 struct User: Codable, Identifiable {
     let name: String
-    let id: Int
     let username: String
     let email: String?
-    let nickname: String?
+    let displayName: String?
     let avatarUrl: String?
     let description: String?
     let role: String
@@ -15,14 +14,20 @@ struct User: Codable, Identifiable {
     let updateTime: String?
 
     enum CodingKeys: String, CodingKey {
-        case name, id, username, email, nickname, description, role
+        case name, username, email, description, role
+        case displayName = "displayName"
         case avatarUrl = "avatarUrl"
         case createTime = "createTime"
         case updateTime = "updateTime"
     }
 
-    var displayName: String {
-        nickname ?? username
+    // Extract numeric ID from name (e.g., "users/1" -> "1")
+    var id: String {
+        String(name.split(separator: "/").last ?? "")
+    }
+
+    var userDisplayName: String {
+        displayName ?? username
     }
 }
 
@@ -30,7 +35,6 @@ struct User: Codable, Identifiable {
 
 struct Memo: Codable, Identifiable {
     let name: String
-    let uid: String
     let content: String
     let visibility: String
     let pinned: Bool
@@ -41,13 +45,13 @@ struct Memo: Codable, Identifiable {
     let reactions: [Reaction]?
     let property: MemoProperty?
     let parent: String?
-    let resources: [Resource]?
+    let attachments: [Attachment]?
     let relations: [MemoRelation]?
 
-    var id: String { uid }
+    var id: String { name }
 
     enum CodingKeys: String, CodingKey {
-        case name, uid, content, visibility, pinned, tags, reactions, property, parent, resources, relations
+        case name, content, visibility, pinned, tags, reactions, property, parent, attachments, relations
         case createTime = "createTime"
         case updateTime = "updateTime"
         case displayTime = "displayTime"
@@ -85,23 +89,24 @@ struct MemoProperty: Codable {
 // MARK: - Reaction
 
 struct Reaction: Codable, Identifiable {
-    let id: Int
+    let name: String
     let creator: String
     let contentId: String
     let reactionType: String
 
+    var id: String { name }
+
     enum CodingKeys: String, CodingKey {
-        case id, creator
+        case name, creator
         case contentId = "contentId"
         case reactionType = "reactionType"
     }
 }
 
-// MARK: - Resource
+// MARK: - Attachment
 
-struct Resource: Codable, Identifiable {
+struct Attachment: Codable, Identifiable {
     let name: String
-    let uid: String
     let createTime: String
     let filename: String
     let externalLink: String?
@@ -109,10 +114,10 @@ struct Resource: Codable, Identifiable {
     let size: Int64
     let memo: String?
 
-    var id: String { uid }
+    var id: String { name }
 
     enum CodingKeys: String, CodingKey {
-        case name, uid, filename, type, size, memo
+        case name, filename, type, size, memo
         case createTime = "createTime"
         case externalLink = "externalLink"
     }
@@ -143,7 +148,7 @@ struct UserStats: Codable {
 
     enum CodingKeys: String, CodingKey {
         case name
-        case memoCount = "memoCount"
+        case memoCount = "totalMemoCount"
         case tagCount = "tagCount"
     }
 
