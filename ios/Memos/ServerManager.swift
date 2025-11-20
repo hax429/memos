@@ -73,9 +73,7 @@ class ServerManager: ObservableObject {
             DispatchQueue.main.async {
                 // Update APIClient with the actual server URL BEFORE setting isRunning
                 // This ensures authentication uses the correct URL
-                if let url = url {
-                    APIClient.shared.updateBaseURL(url)
-                }
+                APIClient.shared.updateBaseURL(url)
 
                 self.serverURL = url
                 self.isRunning = true
