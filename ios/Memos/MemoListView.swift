@@ -200,7 +200,7 @@ struct MemoRow: View {
 
 struct TagButton: View {
     let tag: String
-    let count: Int
+    let count: Int32
     let action: () -> Void
 
     var body: some View {
