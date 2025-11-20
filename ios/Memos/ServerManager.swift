@@ -92,8 +92,6 @@ class ServerManager: ObservableObject {
     }
 
     func stopServer() {
-        guard isRunning else { return }
-
         do {
             var stopError: NSError?
             MobileStopServer(&stopError)
@@ -112,6 +110,8 @@ class ServerManager: ObservableObject {
         } catch {
             DispatchQueue.main.async {
                 self.error = error.localizedDescription
+                self.isRunning = false
+                self.serverURL = nil
             }
             print("Failed to stop server: \(error)")
         }
@@ -192,9 +192,16 @@ class ServerManager: ObservableObject {
     }
 
     private func handleWillTerminate() {
-        print("App terminating")
-        stopServer()
+        print("App will terminate")
+        // Always try to stop the server, even if Swift state says it's not running
+        // This ensures cleanup on the Go side
+        var stopError: NSError?
+        MobileStopServer(&stopError)
+        if let error = stopError {
+            print("Error stopping server on terminate: \(error)")
+        }
         KeepAliveManager.shared.stopKeepAlive()
+        print("App terminating")
     }
 
     // MARK: - State Persistence

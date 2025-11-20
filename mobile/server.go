@@ -47,8 +47,24 @@ func NewServer(dataDir string, port int, addr string, mode string) (string, erro
 	serverMu.Lock()
 	defer serverMu.Unlock()
 
+	// If a stale server instance exists (e.g., from incomplete shutdown),
+	// clean it up before starting a new one
 	if globalServer != nil {
-		return "", fmt.Errorf("server already running")
+		logger := slog.Default()
+		logger.Warn("Found existing server instance, cleaning up before starting new server")
+
+		// Try to shutdown the existing server gracefully
+		if globalServer.server != nil {
+			globalServer.server.Shutdown(globalServer.ctx)
+		}
+
+		// Cancel the context
+		if globalServer.cancel != nil {
+			globalServer.cancel()
+		}
+
+		// Clear the global server reference
+		globalServer = nil
 	}
 
 	// Set up logger
@@ -133,16 +149,21 @@ func StopServer() error {
 	defer serverMu.Unlock()
 
 	if globalServer == nil {
-		return fmt.Errorf("no server running")
+		return nil // No error if server is already stopped
 	}
 
 	globalServer.mu.Lock()
 	defer globalServer.mu.Unlock()
 
 	globalServer.logger.Info("Stopping memos server")
+
+	// Always clear the global server reference, even if shutdown fails
+	defer func() {
+		globalServer = nil
+	}()
+
 	globalServer.server.Shutdown(globalServer.ctx)
 	globalServer.cancel()
-	globalServer = nil
 
 	return nil
 }
